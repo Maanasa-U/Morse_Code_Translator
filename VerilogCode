@@ -1,0 +1,182 @@
+//VERILOG CODE
+module top(input clk,rst,dot_in,dash_in,off_button,
+           output [7:0]result);
+  wire [1:0] dot_out;
+  wire [1:0] dash_out;
+ wire [2:0] c;
+  wire [4:0] out;
+  wire out1;
+  wire [1:0]out2;
+  wire [2:0]out3;
+  wire [3:0]out4;
+  wire [4:0]out5;
+  
+  
+push_button p1(clk,rst,dot_in,dash_in,off_button,dot_out,dash_out,c,out);
+
+  mapping m1(clk,rst,off_button,c,out,result);
+endmodule
+
+module mapping(
+    input clk, rst,off_button,
+    input [2:0] c,
+    input [4:0] array,
+    output reg [7:0] result
+);
+
+    reg out1;
+    reg [1:0] out2;
+    reg [2:0] out3;
+    reg [3:0] out4;
+    reg [4:0] out5;
+
+    always @(posedge clk or posedge rst) begin
+        if (rst)
+            result <= 0;
+    end
+
+  always @(posedge clk or posedge rst ) begin
+if( off_button)
+    
+     begin
+        if (rst) begin
+            out1 <= 1'bx;
+            out2 <= 2'bxx;
+            out3 <= 3'bxxx;
+            out4 <= 4'bxxxx;
+            out5 <= 5'bxxxxx;
+        end else begin
+            case (c)
+                3'b001: out1 <= array[0];
+                3'b010: out2 <= array[1:0];
+                3'b011: out3 <= array[2:0];
+                3'b100: out4 <= array[3:0];
+                3'b101: out5 <= array;
+                default: begin
+                    out1 <= 1'bx;
+                    out2 <= 2'bxx;
+                    out3 <= 3'bxxx;
+                    out4 <= 4'bxxxx;
+                    out5 <= 5'bxxxxx;
+                end
+            endcase
+        end
+end
+  end
+
+    always @(posedge clk) begin
+        case (out1)
+            1'b0: result <= 8'b10011110; // E
+            1'b1: result <= 8'b11100001; // t
+        endcase
+    end
+
+    always @(posedge clk) begin
+        case (out2)
+            2'b01: result <= 8'b00010001; // a
+            2'b00: result <= 8'b10011111; // I
+            2'b10: result <= 8'b11010101; // n
+        endcase
+    end
+
+    always @(posedge clk) begin
+        case (out3)
+            3'b100: result <= 8'b10000101; // d
+            3'b110: result <= 8'b00001001; // g
+        endcase
+    end
+
+    always @(posedge clk) begin
+        case (out4)
+            4'b1000: result <= 8'b11000001; // b
+            4'b1010: result <= 8'b01100011; // C
+            4'b0010: result <= 8'b01110000; // F
+            4'b0000: result <= 8'b10010000 ; // H
+            4'b0100: result <= 8'b11100011; // L
+            4'b0110: result <= 8'b00110001; // P
+            4'b1101: result <= 8'b00011001; // q
+            4'b1011: result <= 8'b10001001; // y
+        endcase
+    end
+
+    always @(posedge clk) begin
+        case (out5)
+            5'b11111: result <= 8'b00000011;
+            5'b01111: result <= 8'b10011111;
+            5'b00111: result <= 8'b00100101;
+            5'b00011: result <= 8'b00001101;
+            5'b00001: result <= 8'b10011001;
+           // 5'b00000: result <= 8'b01001001;
+            5'b10000: result <= 8'b01000001;
+            5'b11000: result <= 8'b00011111;
+            5'b11100: result <= 8'b00000001;
+            5'b11110: result <= 8'b00001001;
+        endcase
+    end
+
+endmodule
+
+module push_button(
+    input clk, rst, dot_in, dash_in, off_button, 
+    output reg [1:0] dot_out,
+    output reg [1:0] dash_out,
+    output  [2:0] c,
+    output reg [4:0] out
+);
+    reg [5:0] count1;
+    reg [5:0] count2;
+    reg [2:0] number = 3'b000;
+    reg [4:0] array = 5'b0;
+    integer i = 5;
+
+    always @(posedge clk or posedge rst) begin
+        if (rst | off_button) begin 
+            count1 <= 0;
+            count2 <= 0;
+            dot_out <= 0;
+            dash_out <= 0;
+            number <= 3'b000;
+            array <= 5'b0;
+            i = 5;
+        end
+        else begin
+            if (dot_in) begin
+                count1 <= count1 + 1;
+                if (count1 > 0 && count1 < 100) begin
+                    dot_out <= 0;
+                    array[i] <= dot_out;
+                    i = i - 1;
+                    if (i < 0)
+                        i = 0;
+                end
+            end
+            else if (dot_in == 0) begin
+                dot_out <= 1;
+                
+            end
+            
+            if (dash_in) begin
+                dash_out <= 1;
+                count2 <= count2 + 1;
+              // dash_out <= 0;
+                array[i] <= dash_out;
+                i = i - 1;
+                if (i < 0)
+                    i = 0;
+            end
+            else if (dash_in == 0) begin
+                dash_out <= 0;
+                
+            end
+        end
+        out = array;
+    end
+
+    always @(posedge dot_in or posedge dash_in) begin
+        if (~off_button)
+            number <= number + 1;
+    end
+
+    assign c = number;
+      
+endmodule
